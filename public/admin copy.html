@@ -47,26 +47,36 @@
     
     <script>
         async function loadDashboard() {
-    try {
-        // Fetch Summary
-        const sumRes = await fetch('/api/summary');
-        const summary = await sumRes.json();
-        document.getElementById('totalEngaged').innerText = summary.total_engaged;
-        document.getElementById('status1').innerText = summary.status_1;
-        document.getElementById('status4').innerText = summary.status_4;
+            try {
+                // 1. Fetch Summary Counts
+                const sumRes = await fetch('/api/summary');
+                const summary = await sumRes.json();
+                document.getElementById('totalEngaged').innerText = summary.total_engaged;
+                document.getElementById('status1').innerText = summary.status_1;
+                document.getElementById('status4').innerText = summary.status_4;
 
-        // Fetch Chart Data
-        const statRes = await fetch('/api/stats');
-        const chartData = await statRes.json();
+                // 2. Fetch Chart Data
+                const statRes = await fetch('/api/stats');
+                const chartData = await statRes.json();
 
-        // ... rest of your Chart.js code ...
-
-    } catch (e) {
-        console.error("Connection issue:", e);
-        alert("Could not load data. Check your connection.");
-    }
-}
-        
+                new Chart(document.getElementById('chartCanvas'), {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.map(d => d.category),
+                        datasets: [{
+                            label: 'People per Status',
+                            data: chartData.map(d => d.total),
+                            backgroundColor: '#6366f1',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            } catch (e) {
+                console.error("Auth error or connection issue");
+                window.location.href = "/login.html"; // Redirect if session expired
+            }
+        }
         loadDashboard();
     </script>
 </body>

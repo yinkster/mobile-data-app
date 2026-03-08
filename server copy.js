@@ -55,7 +55,11 @@ const initDb = async () => {
 };
 initDb();
 
-
+// 4. Bouncer Middleware (Restricts access to Admin pages)
+const isAdmin = (req, res, next) => {
+    if (req.session.authenticated) return next();
+    res.status(401).send('Unauthorized: Please login.');
+};
 
 // --- ROUTES ---
 
@@ -98,10 +102,8 @@ app.get('/api/logout', (req, res) => {
     res.redirect('/login.html'); // Sends you back to login
 });
 
-// --- REMOVE THE isAdmin MIDDLEWARE FUNCTION ---
-
-// Updated CSV Export (Now public but use a unique link)
-app.get('/api/export', async (req, res) => {
+// DOWNLOAD CSV (Protected)
+app.get('/api/export', isAdmin, async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM engagements ORDER BY created_at DESC');
         const json2csvParser = new Parser();
@@ -115,18 +117,8 @@ app.get('/api/export', async (req, res) => {
     }
 });
 
-// Updated Stats API (Now public)
-app.get('/api/stats', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT engagement_status as category, COUNT(*) as total FROM engagements GROUP BY engagement_status');
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: "Failed to fetch stats" });
-    }
-});
-
-// Updated Dashboard Summary API (Now public)
-app.get('/api/summary', async (req, res) => {
+// GET DASHBOARD SUMMARY (Protected)
+app.get('/api/summary', isAdmin, async (req, res) => {
     try {
         const query = `
             SELECT 
