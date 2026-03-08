@@ -72,15 +72,26 @@ app.post('/api/save', async (req, res) => {
     }
 });
 
-// ADMIN LOGIN
+// --- ADMIN LOGIN (With Username and Password) ---
 app.post('/api/login', (req, res) => {
-    const { password } = req.body;
-    if (password === "DonutFan87") { // CHANGE YOUR PASSWORD HERE
+    const { username, password } = req.body;
+    
+    // Set your desired credentials here
+    const ADMIN_USER = "admin"; 
+    const ADMIN_PW = "FiveFold12345"; 
+
+    if (username === ADMIN_USER && password === ADMIN_PW) {
         req.session.authenticated = true;
         res.json({ success: true });
     } else {
-        res.status(401).json({ error: "Invalid password" });
+        res.status(401).json({ error: "Invalid credentials" });
     }
+});
+
+// --- LOGOUT ROUTE ---
+app.get('/api/logout', (req, res) => {
+    req.session.destroy(); // Destroys the session on the server
+    res.redirect('/login.html'); // Sends you back to login
 });
 
 // DOWNLOAD CSV (Protected)
