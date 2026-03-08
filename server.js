@@ -16,12 +16,20 @@ const pool = new Pool({
 app.use(express.json());
 app.use(express.static('public'));
 
-// 2. SESSION CONFIG (For Admin Security)
+// 1.B Tell Express to trust the Render proxy (Crucial for cookies to stick)
+app.set('trust proxy', 1);
+
+// 2. Updated Session Config (For Admin Security)
 app.use(session({
-    secret: 'engagement-secret-key', // Change this to a random string
-    resave: false,
+    secret: 'engagement-secret-key',
+    resave: true,                // Changed to true to keep session alive
     saveUninitialized: false,
-    cookie: { maxAge: 3600000 } // 1 hour session
+    proxy: true,                 // Required for Render
+    cookie: { 
+        secure: true,            // Required for HTTPS on Render
+        sameSite: 'none',        // Helps cookies work across proxy redirects
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours (much more stable)
+    }
 }));
 
 // 3. INITIALIZE TABLE (Matches your 9 frontend fields)
