@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapid Entry</title>
+    <title>Quick Engagement Capture</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 p-4 font-sans">
     <div class="max-w-lg mx-auto bg-white p-6 rounded-2xl shadow-md border border-gray-100">
-        <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">New Entry</h2>
+        <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">New Person</h2>
         
         <div class="grid grid-cols-1 gap-4">
             <input id="name" type="text" placeholder="Full Name" class="w-full p-3 border rounded-lg shadow-sm">
@@ -16,18 +16,29 @@
             <input id="email" type="email" placeholder="Email Address" class="w-full p-3 border rounded-lg shadow-sm">
             
             <div class="grid grid-cols-2 gap-4">
-                <select id="cat" class="p-3 border rounded-lg shadow-sm bg-white text-gray-600">
-                    <option>Sales</option><option>Expense</option><option>Inventory</option>
+                <select id="ev" class="p-3 border rounded-lg shadow-sm bg-white text-gray-600">
+                    <option value="" disabled selected>Select Minister</option>
+                    <option>Ayo</option><option>Buky</option><option>Debbie</option>
+                    <option>Efosa</option><option>Nadesha</option><option>Yinka</option>
                 </select>
                 <input id="loc" type="text" placeholder="Location" class="p-3 border rounded-lg shadow-sm">
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-                <input id="amt" type="number" step="0.01" placeholder="Amount ($)" class="p-3 border rounded-lg shadow-sm">
-                <input id="qty" type="number" placeholder="Quantity" class="p-3 border rounded-lg shadow-sm">
+                <input id="age" type="number" placeholder="Age" class="p-3 border rounded-lg shadow-sm">
+                <input id="tel" type="tel" placeholder="Telephone Number" class="p-3 border rounded-lg shadow-sm">
             </div>
 
             <input id="date" type="date" class="w-full p-3 border rounded-lg shadow-sm text-gray-600">
+
+            <select id="status" class="w-full p-3 border rounded-lg shadow-sm bg-white text-gray-600">
+                <option value="" disabled selected>Select Status</option>
+                <option>1. Newly Saved</option>
+                <option>2. Already Saved - Interested</option>
+                <option>3. Already Saved - Not Interested</option>
+                <option>4. Not Saved - Interested</option>
+                <option>5. Wants More Information</option>
+            </select>
 
             <textarea id="note" placeholder="Additional Notes..." class="w-full p-3 border rounded-lg shadow-sm h-24"></textarea>
 
@@ -40,23 +51,24 @@
                 SUBMIT DATA
             </button>
         </div>
-        <p id="status" class="mt-4 text-center font-medium"></p>
+        <p id="responseMsg" class="mt-4 text-center font-medium"></p>
     </div>
 
     <script>
         async function submitData() {
             const btn = document.getElementById('btn');
-            const status = document.getElementById('status');
+            const responseMsg = document.getElementById('responseMsg');
             btn.innerText = "Processing...";
             
             const data = {
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
-                cat: document.getElementById('cat').value,
-                amt: document.getElementById('amt').value,
-                qty: document.getElementById('qty').value,
+                ev: document.getElementById('ev').value,
+                age: document.getElementById('age').value,
+                tel: document.getElementById('tel').value,
                 date: document.getElementById('date').value,
                 loc: document.getElementById('loc').value,
+                status: document.getElementById('status').value,
                 note: document.getElementById('note').value,
                 urgent: document.getElementById('urgent').checked
             };
@@ -68,14 +80,14 @@
                     body: JSON.stringify(data)
                 });
                 if (res.ok) {
-                    status.innerHTML = "✅ Saved to PostgreSQL";
-                    status.className = "mt-4 text-center text-green-600";
-                    // Clear fields
-                    document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+                    responseMsg.innerHTML = "✅ Saved to PostgreSQL";
+                    responseMsg.className = "mt-4 text-center text-green-600";
+                    // Clear all fields
+                    document.querySelectorAll('input, textarea, select').forEach(el => el.value = '');
                 }
             } catch (e) {
-                status.innerText = "❌ Connection Error";
-                status.className = "mt-4 text-center text-red-600";
+                responseMsg.innerText = "❌ Connection Error";
+                responseMsg.className = "mt-4 text-center text-red-600";
             }
             btn.innerText = "SUBMIT DATA";
         }
