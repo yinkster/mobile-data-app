@@ -92,6 +92,24 @@ app.post('/api/login', (req, res) => {
     }
 });
 
+// GET MONTHLY BREAKDOWN
+app.get('/api/monthly-stats', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                TO_CHAR(entry_date, 'YYYY-MM') as month_year,
+                COUNT(*) as count
+            FROM engagements
+            GROUP BY month_year
+            ORDER BY month_year DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch monthly stats" });
+    }
+});
+
 // --- LOGOUT ROUTE ---
 app.get('/api/logout', (req, res) => {
     req.session.destroy(); // Destroys the session on the server

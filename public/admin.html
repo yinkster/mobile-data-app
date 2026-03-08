@@ -5,69 +5,126 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 md:p-8">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6">Engagement Overview</h1>
-
-    <div class="flex justify-between items-center mb-8">
-    <h1 class="text-2xl font-bold text-gray-800">Engagement Overview</h1>
-        <a href="/api/logout" class="text-sm font-semibold text-red-600 hover:text-red-800 bg-red-50 px-4 py-2 rounded-lg border border-red-200">
-        Logout
-        </a>
-    </div>    
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-indigo-500">
-                <p class="text-sm text-gray-500 uppercase font-bold">Total Engaged</p>
-                <p id="totalEngaged" class="text-3xl font-black text-gray-800">0</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-                <p class="text-sm text-gray-500 uppercase font-bold">Newly Saved (1)</p>
-                <p id="status1" class="text-3xl font-black text-gray-800">0</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500">
-                <p class="text-sm text-gray-500 uppercase font-bold">Interested (4)</p>
-                <p id="status4" class="text-3xl font-black text-gray-800">0</p>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
-            <canvas id="chartCanvas"></canvas>
-        </div>
-
-        <div class="flex flex-wrap gap-4">
-            <a href="/api/export" class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold shadow hover:bg-green-700">
-                📥 Download CSV
+<body class="bg-gray-50 p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Analytics Dashboard</h1>
+            <a href="/index.html" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                ← Back to Entry Form
             </a>
-            <button onclick="location.href='/index.html'" class="bg-white border px-6 py-3 rounded-lg">
-                + New Entry
+        </div>
+
+        <div class="bg-indigo-600 rounded-2xl p-8 mb-8 shadow-xl shadow-indigo-200 text-white relative overflow-hidden">
+            <div class="relative z-10">
+                <p class="text-indigo-100 font-semibold uppercase tracking-wider text-sm">Overall Total Engaged (All Time)</p>
+                <h2 id="totalAllTime" class="text-6:xl font-black mt-2">0</h2>
+            </div>
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500 rounded-full opacity-50"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-400 font-bold uppercase mb-3">Monthly Engagement</p>
+                <select id="monthSelect" onchange="updateMonthlyDisplay()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">Loading months...</option>
+                </select>
+                <p id="monthCountDisplay" class="mt-4 text-2xl font-black text-slate-800">---</p>
+                <p class="text-xs text-slate-400">People reached this month</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-emerald-500 font-bold uppercase mb-3">Newly Saved (Status 1)</p>
+                <p id="status1" class="text-4xl font-black text-slate-800">0</p>
+                <p class="text-xs text-slate-400 mt-2">Total records with Status 1</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-orange-500 font-bold uppercase mb-3">Interested (Status 4)</p>
+                <p id="status4" class="text-4xl font-black text-slate-800">0</p>
+                <p class="text-xs text-slate-400 mt-2">Total records with Status 4</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-8">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">Engagement Breakdown</h3>
+            <canvas id="chartCanvas" style="max-height: 400px;"></canvas>
+        </div>
+
+        <div class="flex justify-center">
+            <button onclick="protectedExport()" class="flex items-center gap-2 bg-slate-900 text-white px-10 py-4 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95">
+                <span>📥</span> Download Full CSV Database
             </button>
         </div>
     </div>
-    
+
     <script>
-        async function loadDashboard() {
-    try {
-        // Fetch Summary
-        const sumRes = await fetch('/api/summary');
-        const summary = await sumRes.json();
-        document.getElementById('totalEngaged').innerText = summary.total_engaged;
-        document.getElementById('status1').innerText = summary.status_1;
-        document.getElementById('status4').innerText = summary.status_4;
+        let monthlyData = [];
 
-        // Fetch Chart Data
-        const statRes = await fetch('/api/stats');
-        const chartData = await statRes.json();
+        // Function to turn "2026-03" into "March 2026"
+        function formatMonthName(monthString) {
+            const [year, month] = monthString.split('-');
+            const date = new Date(year, month - 1);
+            return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
+        }
 
-        // ... rest of your Chart.js code ...
+        async function init() {
+            try {
+                // 1. Fetch Global Summary
+                const sumRes = await fetch('/api/summary');
+                const summary = await sumRes.json();
+                document.getElementById('totalAllTime').innerText = summary.total_engaged;
+                document.getElementById('status1').innerText = summary.status_1;
+                document.getElementById('status4').innerText = summary.status_4;
 
-    } catch (e) {
-        console.error("Connection issue:", e);
-        alert("Could not load data. Check your connection.");
-    }
-}
-        
-        loadDashboard();
+                // 2. Fetch & Format Monthly Data
+                const monthRes = await fetch('/api/monthly-stats');
+                monthlyData = await monthRes.json();
+                const selector = document.getElementById('monthSelect');
+                selector.innerHTML = '<option value="" disabled selected>Select a Month</option>';
+                
+                monthlyData.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.month_year;
+                    option.textContent = formatMonthName(item.month_year); 
+                    selector.appendChild(option);
+                });
+
+                // 3. Fetch Chart Stats
+                const statRes = await fetch('/api/stats');
+                const chartData = await statRes.json();
+                new Chart(document.getElementById('chartCanvas'), {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.map(d => d.category),
+                        datasets: [{ 
+                            label: 'People', 
+                            data: chartData.map(d => d.total), 
+                            backgroundColor: '#6366f1',
+                            borderRadius: 8
+                        }]
+                    },
+                    options: { 
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, grid: { display: false } } }
+                    }
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        function updateMonthlyDisplay() {
+            const selected = document.getElementById('monthSelect').value;
+            const record = monthlyData.find(d => d.month_year === selected);
+            document.getElementById('monthCountDisplay').innerText = record ? record.count : "---";
+        }
+
+        function protectedExport() {
+            const pw = prompt("Admin Authorization Required:");
+            if (pw === "Admin123") window.location.href = "/api/export";
+            else if (pw !== null) alert("Access Denied.");
+        }
+
+        init();
     </script>
 </body>
 </html>
